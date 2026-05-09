@@ -4,6 +4,7 @@ A full-stack web app to explore Bangalore pincodes ↔ area names. Search by pin
 
 ![Node.js](https://img.shields.io/badge/Node.js-16+-green?style=flat-square)
 ![React](https://img.shields.io/badge/React-18-blue?style=flat-square)
+![Express](https://img.shields.io/badge/Express-4.18-lightgrey?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
 
 ## ✨ Features
@@ -11,8 +12,8 @@ A full-stack web app to explore Bangalore pincodes ↔ area names. Search by pin
 - 🔍 **Bidirectional search** — search by pincode (`560001`) or area name (`Koramangala`)
 - 🗺️ **Zone filter** — browse by Central, North, South, East, West
 - 📋 **100+ pincodes** covering all major Bangalore areas
-- 🖱️ **Click any card** for detailed info in a modal
-- ⚡ Fast in-memory search, no external database needed
+- 🖱️ **Click any card** for full details in a modal
+- ⚠️ **Error handling** — input validation, API errors, 404s all handled gracefully
 
 ## 🛠 Tech Stack
 
@@ -28,16 +29,22 @@ A full-stack web app to explore Bangalore pincodes ↔ area names. Search by pin
 - Node.js 16+
 - npm
 
-### Installation & Run
+### Installation
 
 ```bash
 git clone https://github.com/eshfaq-ux/bangalore-pincode-explorer.git
 cd bangalore-pincode-explorer
 
-# Install dependencies
+# Install backend deps
 npm install
-cd client && npm install && cd ..
 
+# Install frontend deps
+cd client && npm install && cd ..
+```
+
+### Run
+
+```bash
 # Terminal 1 — Backend (http://localhost:3001)
 npm start
 
@@ -60,21 +67,30 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ### Examples
 
 ```bash
-curl http://localhost:3001/api/search?q=koramangala
-# [{ "pincode": "560017", "area": "Koramangala", "locality": "Koramangala", "zone": "South" }]
+# Search by area name
+curl "http://localhost:3001/api/search?q=koramangala"
 
-curl http://localhost:3001/api/pincode/560001
-# { "pincode": "560001", "area": "Bangalore GPO", "locality": "MG Road", "zone": "Central" }
+# Lookup a specific pincode
+curl "http://localhost:3001/api/pincode/560001"
 
-curl http://localhost:3001/api/zone/North
-# [...all North zone pincodes]
+# Get all South zone pincodes
+curl "http://localhost:3001/api/zone/South"
+```
+
+### Error Responses
+
+```json
+{ "error": "Pincode must be a 6-digit number" }
+{ "error": "Query must be at least 2 characters" }
+{ "error": "Invalid zone. Valid zones: Central, North, South, East, West" }
+{ "error": "Route not found" }
 ```
 
 ## 📁 Project Structure
 
 ```
 bangalore-pincode-explorer/
-├── server.js           # Express API server
+├── server.js           # Express API server with error handling
 ├── data/
 │   └── pincodes.js     # Pincode dataset (100+ entries)
 ├── client/
@@ -86,15 +102,6 @@ bangalore-pincode-explorer/
 │       └── index.css   # Styles
 └── package.json
 ```
-
-## 📸 Preview
-
-| Feature | Description |
-|---|---|
-| Search | Type pincode or area name, press Enter or click Search |
-| Zone Filter | Click Central / North / South / East / West tabs |
-| Card Grid | All matching areas shown as cards |
-| Detail Modal | Click any card to see full details |
 
 ## 📄 License
 

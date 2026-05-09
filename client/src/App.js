@@ -23,7 +23,7 @@ function Modal({ item, onClose }) {
         <button className="modal-close" onClick={onClose}>×</button>
         <h2>{item.pincode}</h2>
         <div className="modal-area">{item.area}</div>
-        <br />
+        <hr className="modal-divider" />
         <div className="modal-row"><span>Locality</span><span>{item.locality}</span></div>
         <div className="modal-row"><span>Zone</span><span><ZoneBadge zone={item.zone} /></span></div>
         <div className="modal-row"><span>City</span><span>Bangalore, Karnataka</span></div>
