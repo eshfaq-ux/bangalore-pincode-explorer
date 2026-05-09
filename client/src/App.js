@@ -33,43 +33,55 @@ function Modal({ item, onClose }) {
   );
 }
 
+async function apiFetch(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `Request failed (${res.status})`);
+  }
+  return res.json();
+}
+
 export default function App() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [zones, setZones] = useState([]);
   const [activeZone, setActiveZone] = useState("All");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    fetch("/api/zones").then((r) => r.json()).then(setZones).catch(() => {});
-    fetchAll();
+    apiFetch("/api/zones").then(setZones).catch(() => {});
+    load("/api/all");
   }, []);
 
-  const fetchAll = async () => {
+  const load = async (url) => {
     setLoading(true);
-    const data = await fetch("/api/all").then((r) => r.json()).catch(() => []);
-    setResults(data);
-    setLoading(false);
+    setError(null);
+    try {
+      const data = await apiFetch(url);
+      setResults(data);
+    } catch (err) {
+      setError(err.message);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const search = async (q) => {
-    setLoading(true);
+  const search = () => {
+    const q = query.trim();
+    if (!q) return load("/api/all");
+    if (q.length < 2) { setError("Enter at least 2 characters"); return; }
     setActiveZone("All");
-    const url = q.trim() ? `/api/search?q=${encodeURIComponent(q)}` : "/api/all";
-    const data = await fetch(url).then((r) => r.json()).catch(() => []);
-    setResults(data);
-    setLoading(false);
+    load(`/api/search?q=${encodeURIComponent(q)}`);
   };
 
-  const filterByZone = async (zone) => {
+  const filterByZone = (zone) => {
     setActiveZone(zone);
     setQuery("");
-    setLoading(true);
-    const url = zone === "All" ? "/api/all" : `/api/zone/${zone}`;
-    const data = await fetch(url).then((r) => r.json()).catch(() => []);
-    setResults(data);
-    setLoading(false);
+    load(zone === "All" ? "/api/all" : `/api/zone/${zone}`);
   };
 
   return (
@@ -84,11 +96,13 @@ export default function App() {
           type="text"
           placeholder="Enter pincode (560001) or area (Koramangala)…"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && search(query)}
+          onChange={(e) => { setQuery(e.target.value); setError(null); }}
+          onKeyDown={(e) => e.key === "Enter" && search()}
         />
-        <button onClick={() => search(query)}>Search</button>
+        <button onClick={search}>Search</button>
       </div>
+
+      {error && <div className="error-banner">⚠️ {error}</div>}
 
       <div className="tabs">
         {["All", ...zones].map((z) => (
@@ -102,21 +116,21 @@ export default function App() {
         ))}
       </div>
 
-      {!loading && results.length > 0 && (
+      {!loading && !error && results.length > 0 && (
         <div className="stats">{results.length} result{results.length !== 1 ? "s" : ""}</div>
       )}
 
       {loading ? (
         <div className="empty">Loading…</div>
-      ) : results.length === 0 ? (
+      ) : !error && results.length === 0 ? (
         <div className="empty">No results found.</div>
-      ) : (
+      ) : !error ? (
         <div className="results-grid">
           {results.map((item) => (
             <Card key={item.pincode} item={item} onClick={setSelected} />
           ))}
         </div>
-      )}
+      ) : null}
 
       <Modal item={selected} onClose={() => setSelected(null)} />
     </div>

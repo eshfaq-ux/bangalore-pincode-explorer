@@ -91,6 +91,16 @@ header p {
   color: white;
 }
 
+.error-banner {
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  color: #c53030;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
 .stats {
   text-align: right;
   font-size: 0.85rem;
