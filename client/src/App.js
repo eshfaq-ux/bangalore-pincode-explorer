@@ -1,11 +1,45 @@
 import { useState, useEffect } from "react";
 
+function ZoneBadge({ zone }) {
+  return <span className={`zone-badge zone-${zone}`}>{zone}</span>;
+}
+
+function Card({ item, onClick }) {
+  return (
+    <div className="card" onClick={() => onClick(item)}>
+      <div className="pincode">{item.pincode}</div>
+      <div className="area">{item.area}</div>
+      <div className="locality">{item.locality}</div>
+      <ZoneBadge zone={item.zone} />
+    </div>
+  );
+}
+
+function Modal({ item, onClose }) {
+  if (!item) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        <h2>{item.pincode}</h2>
+        <div className="modal-area">{item.area}</div>
+        <br />
+        <div className="modal-row"><span>Locality</span><span>{item.locality}</span></div>
+        <div className="modal-row"><span>Zone</span><span><ZoneBadge zone={item.zone} /></span></div>
+        <div className="modal-row"><span>City</span><span>Bangalore, Karnataka</span></div>
+        <div className="modal-row"><span>Country</span><span>India</span></div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [zones, setZones] = useState([]);
   const [activeZone, setActiveZone] = useState("All");
   const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     fetch("/api/zones").then((r) => r.json()).then(setZones).catch(() => {});
@@ -68,13 +102,23 @@ export default function App() {
         ))}
       </div>
 
+      {!loading && results.length > 0 && (
+        <div className="stats">{results.length} result{results.length !== 1 ? "s" : ""}</div>
+      )}
+
       {loading ? (
         <div className="empty">Loading…</div>
       ) : results.length === 0 ? (
         <div className="empty">No results found.</div>
       ) : (
-        <div className="stats">{results.length} result{results.length !== 1 ? "s" : ""}</div>
+        <div className="results-grid">
+          {results.map((item) => (
+            <Card key={item.pincode} item={item} onClick={setSelected} />
+          ))}
+        </div>
       )}
+
+      <Modal item={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }
